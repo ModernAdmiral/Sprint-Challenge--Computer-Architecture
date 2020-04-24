@@ -101,13 +101,13 @@ class CPU:
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
             if IR == LDI:
-                self.ram_write(operand_a, operand_b)
+                # self.ram_write(operand_a, operand_b)
                 self.register[operand_a] = operand_b
                 self.pc += 3
 
             elif IR == PRN:
                 # print
-                print(self.ram_read(operand_a))
+                print(self.register[operand_a])
                 self.pc += 2
                 # increment the PC by 2 to skip the argument
             elif IR == MUL:
