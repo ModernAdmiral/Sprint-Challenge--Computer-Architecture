@@ -24,6 +24,7 @@ class CPU:
         self.ram = [0] * 256
         self.pc = 0
         self.SP = 7
+        self.FL = 0b00000000
         # I think this is where stack pointer should be initialized
         # self.register[self.SP] = 0xF4
         # self.running = False
@@ -56,7 +57,19 @@ class CPU:
             self.register[reg_a] += self.register[reg_b]
         elif op == "MUL":
             self.ram[reg_a] *= self.ram[reg_b]
-        # elif op == "SUB": etc
+        elif op == "CMP":
+            if self.register[reg_a] == self.register[reg_b]:
+                # raise E flag
+                self.FL = 0b00000001
+            if self.register[reg_a] != self.register[reg_b]:
+                # lower E flag
+                self.FL = 0b00000000
+            if self.register[reg_a] < self.register[reg_b]:
+                # raise L flag
+                self.FL = 0b00000100
+            if self.register[reg_a] > self.register[reg_b]:
+                # raise G flag
+                self.FL = 0b00000010
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -89,7 +102,7 @@ class CPU:
             operand_b = self.ram_read(self.pc + 2)
             if IR == LDI:
                 self.ram_write(operand_a, operand_b)
-                # self.register[operand_a] = operand_b
+                self.register[operand_a] = operand_b
                 self.pc += 3
 
             elif IR == PRN:
@@ -124,13 +137,24 @@ class CPU:
                 self.register[self.SP] += 1
                 self.pc += 2
             elif IR == CMP:
-                pass
+                self.alu("CMP", operand_a, operand_b)
+                self.pc += 3
             elif IR == JMP:
-                pass
+                # Jump to the address stored at a given register
+                # Set the `PC` to the address stored in the given register.
+                self.pc = self.register[operand_a]
             elif IR == JEQ:
-                pass
+                if self.FL == 0b00000001:
+                    self.pc = self.register[operand_a]
+                else:
+                    self.pc += 2
+
             elif IR == JNE:
-                pass
+                if self.FL != 0b00000001:
+                    self.pc = self.register[operand_a]
+                else:
+                    self.pc += 2
             else:
-                print("unknown instruction", IR)
+                # print("unknown instruction", IR)
                 running = False
+            # print("IR", IR)
